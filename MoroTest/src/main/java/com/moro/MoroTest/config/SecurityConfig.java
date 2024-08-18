@@ -1,46 +1,56 @@
 package com.moro.MoroTest.config;
 
 
-import com.moro.MoroTest.service.CustomUserDetailsService;
+
+
+import com.moro.MoroTest.service.UserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.ProviderManager;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.SecurityFilterChain;
+
+import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
     @Autowired
-    private CustomUserDetailsService userDetailsService;
+    private UserDetailsService userDetailsService;
+
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-    @Override
-    protected void configure(HttpSecurity http) throws Exception {
+
+    @Bean
+    public AuthenticationManager authenticationManager() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        //provider.setPasswordEncoder(passwordEncoder());
+        provider.setUserDetailsService(userDetailsService);
+        return new ProviderManager(provider);
+    }
+
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                .csrf().disable() // Disable CSRF for simplicity (consider enabling it for production)
-                .authorizeRequests()
-                // Allow public access to GET requests for listing users
-                .antMatchers("/api/users").permitAll()
-                .antMatchers("/api/users/**").authenticated() // Require authentication for POST, PUT, DELETE
-                .and()
-                .httpBasic(); // Use Basic Authentication
+            .csrf(csrf -> csrf.disable())  // Disable CSRF protection for APIs
+            .authorizeHttpRequests(auth -> auth
+                    //.requestMatchers("/api/users/**").authenticated()  // Protect /api/users/** endpoints
+                    //.requestMatchers("api/users").permitAll()
+                    .anyRequest().permitAll()  // Allow all other requests
+            )
+            .httpBasic(withDefaults());  // Configure HTTP Basic Authentication
+        return http.build();
     }
 
-
-    @Override
-    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
-    }
 }
