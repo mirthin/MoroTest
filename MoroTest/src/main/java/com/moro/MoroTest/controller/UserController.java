@@ -4,7 +4,10 @@ import com.moro.MoroTest.dao.MyUser;
 import com.moro.MoroTest.exception.ResourceNotFoundException;
 import com.moro.MoroTest.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -38,69 +41,61 @@ public class UserController {
 
     @PostMapping
     public MyUser createUser( @RequestBody @Valid MyUser user) {
-        MyUser newUser = user;
-        newUser.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        return userRepository.save(newUser);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+        return userRepository.save(user);
     }
 
     @PutMapping("/{id}")
-    public MyUser updateUser(@PathVariable Long id, @RequestBody @Valid MyUser userDetails) {
+    public MyUser updateUser(@RequestHeader(value = "Authorization", required = true) String authorizationHeader, @PathVariable Long id, @RequestBody @Valid MyUser userDetails) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
         MyUser user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        user.setName(userDetails.getName());
-/*
-        // Optionally update the password if it is provided
-        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        if (user.getUserName().equals(username)) {
+            user.setName(userDetails.getName());
+            user.setUserName(userDetails.getUserName());
+
+            // Optionally update the password if it is provided
+            if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
+                user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+            }
+        } else {
+            throw new AccessDeniedException("You do not have permission to delete this user");
         }
-*/
-        user.setPassword(userDetails.getPassword());
 
         return userRepository.save(user);
     }
 
-    @PatchMapping("/{id}/password")
-    public MyUser updatePassword(@PathVariable Long id,  @RequestBody @Valid String newPassword) {
+    @PutMapping("/{id}/password")
+    public MyUser updatePassword(@RequestHeader(value = "Authorization", required = true) String authorizationHeader, @PathVariable Long id,  @RequestBody @Valid String newPassword) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
         MyUser user = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
 
-        /*
-        // Optionally update the password if it is provided
-        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
+        if (user.getUserName().equals(username)) {
+            user.setPassword(passwordEncoder.encode(newPassword));
+        } else {
+            throw new AccessDeniedException("You do not have permission to delete this user");
         }
-        */
-        user.setPassword(passwordEncoder.encode(newPassword));
-
         return userRepository.save(user);
     }
 
     @DeleteMapping("/{id}")
     public void deleteUser(@RequestHeader(value = "Authorization", required = true) String authorizationHeader, @PathVariable Long id) {
-        if (authorizationHeader != null && authorizationHeader.startsWith("Basic ")) {
-            String base64Credentials = authorizationHeader.substring("Basic ".length()).trim();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName(); // Get the username of the authenticated user
 
-            try {
-                // Decode Base64
-                String credentials = new String(Base64.getDecoder().decode(base64Credentials), StandardCharsets.UTF_8);
-                // Split into username and password
-                String[] values = credentials.split(":", 2);
-                if (values.length == 2) {
-                    String username = values[0];
-                    String password = values[1];
-                    MyUser user = userRepository.findById(id)
-                            .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
-                    if(user.getUserName().equals(username) && passwordEncoder.matches(password, user.getPassword())) {
-                        userRepository.delete(user);
-                        return;
-                    }
-                }
-                throw new BadCredentialsException("Bad credentials");
-            } catch (IllegalArgumentException e) {
-                throw new BadCredentialsException("Bad credentials");
-            }
+        MyUser user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
+
+        if (user.getUserName().equals(username)) {
+            userRepository.delete(user);
+        } else {
+            throw new AccessDeniedException("You do not have permission to delete this user");
         }
     }
 }
