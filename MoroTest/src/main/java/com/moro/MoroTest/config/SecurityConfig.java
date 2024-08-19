@@ -3,7 +3,7 @@ package com.moro.MoroTest.config;
 
 
 
-import com.moro.MoroTest.service.UserDetailsService;
+import com.moro.MoroTest.service.MyUserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -23,7 +23,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 public class SecurityConfig {
 
     @Autowired
-    private UserDetailsService userDetailsService;
+    private MyUserService myUserService;
 
 
     @Bean
@@ -36,7 +36,7 @@ public class SecurityConfig {
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
         //provider.setPasswordEncoder(passwordEncoder());
-        provider.setUserDetailsService(userDetailsService);
+        provider.setUserDetailsService(myUserService);
         return new ProviderManager(provider);
     }
 
