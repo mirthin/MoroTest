@@ -12,14 +12,15 @@ public class Main {
 
             deleteAllUsers();
             addUser("admin", "admin", "Password3*");
-            //addUser("user1", "user1", "password1");
-            //addUser("user2", "user2", "password2");
+            addUser("user1", "user1", "Password1*");
+            addUser("user2", "user2", "Password2*");
 
             updateUserPassword("admin","Password3*", "admin", "Password2*");
             //updateUserPassword("admin","Password3*", "admin", "Password2*");
-            deleteUser("admin", "Password2*", "admin");
-            //updateUser("admin", "admin", "user1", "user1", "a");
-            getAllUsers();
+            deleteUser("admin", "Password2*", "user2");
+            updateUser("admin", "Password2*", "user1", "pepa", "user1", null);
+            //updateUserPassword("user1","Password1*", "user1", "Password2*");
+            //getAllUsers();
 
             //getUserTest();
             //getUserWithParameterTest();
@@ -32,7 +33,7 @@ public class Main {
         }
     }
 
-    public static void updateUser(String authorizationUsername, String authorizationPassword, String name, String username, String newPassword) {
+    public static void updateUser(String authorizationUsername, String authorizationPassword, String username, String newName, String newUsername,  String newPassword) {
         try {
             String auth = authorizationUsername + ":" + authorizationPassword;
             String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
@@ -45,7 +46,12 @@ public class Main {
             connection.setRequestProperty("Content-Type", "application/json; utf-8");
             connection.setRequestProperty("Accept", "application/json");
             connection.setDoOutput(true);
-            String jsonInputString = "{\"name\":\""+ name + "\",\"username\":\"" + username + "\",\"password\":\"" + newPassword + "\"}";
+            String jsonInputString;
+            if(newPassword != null) {
+                jsonInputString = "{\"name\":\"" + newName + "\",\"username\":\"" + newUsername + "\",\"password\":\"" + newPassword + "\"}";
+            } else {
+                jsonInputString = "{\"name\":\"" + newName + "\",\"username\":\"" + newUsername + "\"}";
+            }
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = jsonInputString.getBytes("utf-8");
                 os.write(input, 0, input.length);

@@ -93,7 +93,7 @@ public class UserController {
             }
 
             //only admin can change roles
-            if(myUserService.isUserAdmin(user.getUsername())) {
+            if(myUserService.isUserAdmin(authenticatedUsername)) {
                 user.setRole(userDetails.getRole());
             }
 
@@ -101,7 +101,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have permission to delete this user");
         }
         myUserService.updateUser(user);
-        return ResponseEntity.status(HttpStatus.OK).body(user);
+        return ResponseEntity.status(HttpStatus.OK).body("User updated: " + user);
     }
 
     @PutMapping("/password")
@@ -123,7 +123,7 @@ public class UserController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have permission to delete this user");
         }
         myUserService.updateUser(user);
-        return ResponseEntity.status(HttpStatus.OK).body(user);
+        return ResponseEntity.status(HttpStatus.OK).body("Password updated for user: " + user);
     }
 
     @DeleteMapping("/delete")
@@ -139,17 +139,12 @@ public class UserController {
         //USER can only delete his data, ADMIN can delete all data
         if (user.getUsername().equals(authenticatedUsername) || myUserService.isUserAdmin(authenticatedUsername)) {
             myUserService.deleteUser(user.getId());
-            return ResponseEntity.status(HttpStatus.OK).body(user);
+            return ResponseEntity.status(HttpStatus.OK).body("user successfully deleted");
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have permission to delete this user");
         }
     }
 
-    //ONLY FOR TESTING
-    @GetMapping("/validationtest")
-    public ResponseEntity<?> validationTest(@Valid  @RequestBody Password newPassword) {
-        return ResponseEntity.status(HttpStatus.OK).body("New password is:" + newPassword.getPassword());
-    }
 
     //ONLY FOR TESTING
     @GetMapping("/test")
