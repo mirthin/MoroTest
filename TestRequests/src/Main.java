@@ -10,35 +10,67 @@ public class Main {
     public static void main(String[] args) {
         try {
 
-            addUserTest();
+            deleteAllUsers();
+            addUser("admin", "admin", "Password3*");
+            //addUser("user1", "user1", "password1");
+            //addUser("user2", "user2", "password2");
+
+            updateUserPassword("admin","Password3*", "admin", "Password2*");
+            //updateUserPassword("admin","Password3*", "admin", "Password2*");
+            deleteUser("admin", "Password2*", "admin");
+            //updateUser("admin", "admin", "user1", "user1", "a");
+            getAllUsers();
+
             //getUserTest();
             //getUserWithParameterTest();
-            getAllUsersTest();
-            //updateUserPassword();
+
+            //updateUserPassword("admin","admin","user1", "user1");
             //deleteUserTest();
-            getAllUsersTest();
+            //getAllUsers();
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    public static void updateYourselfPasswordAsUser() throws Exception {
+    public static void updateUser(String authorizationUsername, String authorizationPassword, String name, String username, String newPassword) {
         try {
-            String username = "tomas";
-            String oldPassword = "tomasek";
-            String newPassword = "tomasek";
-            String auth = username + ":" + oldPassword;
+            String auth = authorizationUsername + ":" + authorizationPassword;
             String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
             String authHeader = "Basic " + encodedAuth;
 
-            URL url = new URL("http://localhost:8080/api/users/46/password");
+            URL url = new URL("http://localhost:8080/api/users?username=" + username);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("PUT");
             connection.setRequestProperty("Authorization", authHeader);
             connection.setRequestProperty("Content-Type", "application/json; utf-8");
             connection.setRequestProperty("Accept", "application/json");
             connection.setDoOutput(true);
-            String jsonInputString = newPassword;
+            String jsonInputString = "{\"name\":\""+ name + "\",\"username\":\"" + username + "\",\"password\":\"" + newPassword + "\"}";
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            getReponseAndPrint(connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static void updateUserPassword(String authorizationUsername, String authorizationPassword, String username ,String newPassword) throws Exception {
+        try {
+            String auth = authorizationUsername + ":" + authorizationPassword;
+            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
+            String authHeader = "Basic " + encodedAuth;
+
+            URL url = new URL("http://localhost:8080/api/users/password?username=" + username);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("PUT");
+            connection.setRequestProperty("Authorization", authHeader);
+            connection.setRequestProperty("Content-Type", "application/json; utf-8");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setDoOutput(true);
+            String jsonInputString = "{\"password\":\"" + newPassword + "\"}";
             try (OutputStream os = connection.getOutputStream()) {
                 byte[] input = jsonInputString.getBytes("utf-8");
                 os.write(input, 0, input.length);
@@ -50,63 +82,36 @@ public class Main {
         }
     }
 
-    public static void updateUserPasswordAsAdmin() throws Exception {
-        try {
-            String username = "moj";
-            String oldPassword = "hes";
-            String newPassword = "kol";
-            String auth = username + ":" + oldPassword;
-            String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
-            String authHeader = "Basic " + encodedAuth;
 
-            URL url = new URL("http://localhost:8080/api/users/42/password");
-            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("PUT");
-            connection.setRequestProperty("Authorization", authHeader);
-            connection.setRequestProperty("Content-Type", "application/json; utf-8");
-            connection.setRequestProperty("Accept", "application/json");
-            connection.setDoOutput(true);
-            String jsonInputString = newPassword;
-            try (OutputStream os = connection.getOutputStream()) {
-                byte[] input = jsonInputString.getBytes("utf-8");
-                os.write(input, 0, input.length);
-            }
-            getReponseAndPrint(connection);
-
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
-
-    public static void getAllUsersTest() throws Exception {
+    public static void getAllUsers() throws Exception {
         URL url = new URL("http://localhost:8080/api/users");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         getReponseAndPrint(connection);
     }
 
-    public static void getUserTest() throws Exception {
+    public static void getUser() throws Exception {
         URL url = new URL("http://localhost:8080/api/users/40");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         getReponseAndPrint(connection);
     }
 
-    public static void getUserWithParameterTest() throws Exception {
+    public static void getUserWithParameter() throws Exception {
         URL url = new URL("http://localhost:8080/api/users?id=40");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         getReponseAndPrint(connection);
     }
 
-    public static void addUserTest() throws Exception {
+    public static void addUser(String name, String username, String password) throws Exception {
         URL url = new URL("http://localhost:8080/api/users");
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json; utf-8");
         connection.setRequestProperty("Accept", "application/json");
         connection.setDoOutput(true);
-        String jsonInputString = "{\"name\":\"Tomas\",\"userName\":\"tom\",\"password\":\"tomasek\"}";
+        String jsonInputString = "{\"name\":\""+ name + "\",\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
         try (OutputStream os = connection.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);
@@ -115,16 +120,13 @@ public class Main {
         getReponseAndPrint(connection);
     }
 
-    public static void deleteUserTest() throws Exception {
+    public static void deleteUser(String authorizationUsername, String authorizationPassword, String username) throws Exception {
         try {
-
-            String username = "moj";
-            String password = "hes";
-            String auth = username + ":" + password;
+            String auth = authorizationUsername + ":" + authorizationPassword;
             String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
             String authHeader = "Basic " + encodedAuth;
 
-            URL url = new URL("http://localhost:8080/api/users/15");
+            URL url = new URL("http://localhost:8080/api/users/delete?username=" + username);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("DELETE");
             connection.setRequestProperty("Authorization", authHeader);
@@ -135,8 +137,18 @@ public class Main {
         }
     }
 
+    public static void deleteAllUsers() throws Exception {
+        try {
 
+            URL url = new URL("http://localhost:8080/api/users/deleteall");
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("DELETE");
+            getReponseAndPrint(connection);
 
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
 
 

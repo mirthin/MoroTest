@@ -23,18 +23,17 @@ public class MyUserService implements org.springframework.security.core.userdeta
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        MyUser user = userRepository.findByUserName(username)
+        MyUser user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException(username));
 
-        UserBuilder builder = withUsername(user.getUserName());
+        UserBuilder builder = withUsername(user.getUsername());
         builder.password(user.getPassword());
         builder.roles("USER"); // For simplicity, assigning all users the "USER" role
         return builder.build();
     }
 
-    public MyUser loadUserByUsername2(String userName) throws UsernameNotFoundException {
-        return userRepository.findByUserName(userName)
-                .orElseThrow(() -> new UsernameNotFoundException(userName));
+    public Optional<MyUser> getUserByUsername(String username) throws UsernameNotFoundException {
+        return userRepository.findByUsername(username);
     }
 
     public List<MyUser> getAllUsers() {
@@ -57,8 +56,12 @@ public class MyUserService implements org.springframework.security.core.userdeta
         userRepository.deleteById(id);
     }
 
-    public boolean isUserAdmin(String userName) {
-        Optional<MyUser> userOpt = userRepository.findByUserName(userName);
+    public void deleteAllUsers() {
+        userRepository.deleteAll();
+    }
+
+    public boolean isUserAdmin(String username) {
+        Optional<MyUser> userOpt = userRepository.findByUsername(username);
         return userOpt.map(user -> user.getRole() == Role.ADMIN).orElse(false);
     }
 
