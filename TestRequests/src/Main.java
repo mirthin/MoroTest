@@ -10,24 +10,30 @@ public class Main {
     public static void main(String[] args) {
         try {
 
+
+
             deleteAllUsers();
-            addUser("admin", "admin", "Password3*");
-            addUser("user1", "user1", "Password1*");
-            addUser("user2", "user2", "Password2*");
+            addUser("admin", "admin", "AdminPass1_");
+            addUser("user1", "user1", "User1pass_");
+            addUser("user2", "user2", "User2pass*");
 
-            updateUserPassword("admin","Password3*", "admin", "Password2*");
-            //updateUserPassword("admin","Password3*", "admin", "Password2*");
-            deleteUser("admin", "Password2*", "user2");
-            updateUser("admin", "Password2*", "user1", "pepa", "user1", null);
-            //updateUserPassword("user1","Password1*", "user1", "Password2*");
-            //getAllUsers();
+            //should end with error 400 (Password has to be entered)
+            addUser("user4", "user4", null);
 
-            //getUserTest();
-            //getUserWithParameterTest();
+            updateUserPassword("admin","AdminPass1_", "admin", "AdminPass1_new");
+            updateUserPassword("admin","AdminPass1_ne", "user1", "User1pass_new");
 
-            //updateUserPassword("admin","admin","user1", "user1");
-            //deleteUserTest();
-            //getAllUsers();
+            updateUserWithoutAuthorization("admin", "AdminPass1_new", "user1", "pepa", "user1", null);
+            updateUser("admin", "AdminPass1_new", "user1", "pepa", "user1", null);
+
+            //getUser("user1");
+
+            deleteUser("admin", "AdminPass1_ne", "user2");
+            //deleteUser("admin", "AdminPass1_new", "user2");
+            //deleteUser("user1", "User1pass_new", "user1");
+
+            getAllUsers();
+
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -96,19 +102,14 @@ public class Main {
         getReponseAndPrint(connection);
     }
 
-    public static void getUser() throws Exception {
-        URL url = new URL("http://localhost:8080/api/users/40");
+    public static void getUser(String username) throws Exception {
+        URL url = new URL("http://localhost:8080/api/users/username?username=" + username);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         getReponseAndPrint(connection);
     }
 
-    public static void getUserWithParameter() throws Exception {
-        URL url = new URL("http://localhost:8080/api/users?id=40");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        getReponseAndPrint(connection);
-    }
+
 
     public static void addUser(String name, String username, String password) throws Exception {
         URL url = new URL("http://localhost:8080/api/users");
@@ -117,7 +118,13 @@ public class Main {
         connection.setRequestProperty("Content-Type", "application/json; utf-8");
         connection.setRequestProperty("Accept", "application/json");
         connection.setDoOutput(true);
-        String jsonInputString = "{\"name\":\""+ name + "\",\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        String jsonInputString;
+        if(password != null) {
+            jsonInputString = "{\"name\":\""+ name + "\",\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        } else {
+            jsonInputString = "{\"name\":\""+ name + "\",\"username\":\"" + username + "\"}";
+        }
+
         try (OutputStream os = connection.getOutputStream()) {
             byte[] input = jsonInputString.getBytes("utf-8");
             os.write(input, 0, input.length);
@@ -156,13 +163,45 @@ public class Main {
         }
     }
 
+    public static void updateUserWithoutAuthorization(String authorizationUsername, String authorizationPassword, String username, String newName, String newUsername,  String newPassword) {
+        try {
+
+            URL url = new URL("http://localhost:8080/api/users?username=" + username);
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("PUT");
+            connection.setRequestProperty("Content-Type", "application/json; utf-8");
+            connection.setRequestProperty("Accept", "application/json");
+            connection.setDoOutput(true);
+            String jsonInputString;
+            if(newPassword != null) {
+                jsonInputString = "{\"name\":\"" + newName + "\",\"username\":\"" + newUsername + "\",\"password\":\"" + newPassword + "\"}";
+            } else {
+                jsonInputString = "{\"name\":\"" + newName + "\",\"username\":\"" + newUsername + "\"}";
+            }
+            try (OutputStream os = connection.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes("utf-8");
+                os.write(input, 0, input.length);
+            }
+
+            getReponseAndPrint(connection);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 
 
     private static void getReponseAndPrint(HttpURLConnection connection) throws IOException {
         int responseCode = connection.getResponseCode();
         System.out.println("Response Code: " + responseCode);
 
-        BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        BufferedReader in;
+        if (100 <= connection.getResponseCode() && connection.getResponseCode() <= 399) {
+            in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
+        } else {
+            in = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
+        }
+
         String inputLine;
         StringBuilder response = new StringBuilder();
 

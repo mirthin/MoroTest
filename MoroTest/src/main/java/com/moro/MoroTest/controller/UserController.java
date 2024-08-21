@@ -11,13 +11,15 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * REST controller for managing users.
+ */
 @RestController
 @Validated
 @RequestMapping("/api/users")
@@ -29,6 +31,12 @@ public class UserController {
     @Autowired
     private MyUserService myUserService;
 
+    /**
+     * Retrieves a list of users or a specific user by ID.
+     *
+     * @param id Optional ID of the user to retrieve.
+     * @return A ResponseEntity containing the list of users or a specific user.
+     */
     @GetMapping()
     public ResponseEntity<?> getUsers(@RequestParam Optional<Long> id) {
         if (id.isPresent()) {
@@ -44,7 +52,12 @@ public class UserController {
         }
     }
 
-    //Get single user if there is path variable with ID
+    /**
+     * Retrieves a specific user by ID.
+     *
+     * @param id ID of the user to retrieve.
+     * @return A ResponseEntity containing the user or an error message.
+     */
     @GetMapping("/{id}")
     public ResponseEntity<?> getUser(@PathVariable Long id) {
         return myUserService.getUserById(id)
@@ -52,6 +65,25 @@ public class UserController {
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
+    /**
+     * Retrieves a specific user by username.
+     *
+     * @param username The username of the user to retrieve.
+     * @return A ResponseEntity containing the user or an error message.
+     */
+    @GetMapping("/username")
+    public ResponseEntity<?> getUser(@RequestParam(required = true)  String username) {
+        return myUserService.getUserByUsername(username)
+                .map(user -> new ResponseEntity<>(user, HttpStatus.OK))
+                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    }
+
+    /**
+     * Creates a new user.
+     *
+     * @param user The user details to create.
+     * @return A ResponseEntity containing the created user or an error message.
+     */
     @PostMapping
     public ResponseEntity<?> createUser( @RequestBody @Valid MyUser user) {
         //password cannot be empty
@@ -68,18 +100,27 @@ public class UserController {
             myUserService.addUser(user);
             return ResponseEntity.status(HttpStatus.OK).body(user);
         } else {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Password has to be entered");
+            return new ResponseEntity<>("Password has to be entered", HttpStatus.BAD_REQUEST);
         }
     }
 
+    /**
+     * Updates an existing user's details.
+     *
+     * @param authorizationHeader The authorization header in format: "Authorization": "Basic" + Base64.encode("<username>:<password>")
+     * @param username            The username of the user to update.
+     * @param userDetails         The updated user details.
+     * @return A ResponseEntity indicating the result of the operation.
+     */
     @PutMapping()
-    public ResponseEntity<?>  updateUser(@RequestHeader(value = "Authorization", required = true) String authorizationHeader, @RequestParam(required = true) String username, @RequestBody @Valid MyUser userDetails) {
+    public ResponseEntity<?>  updateUser(@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
+                                         @RequestParam(required = true) String username, @RequestBody @Valid MyUser userDetails) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String authenticatedUsername = authentication.getName();
 
         MyUser user = myUserService.getUserByUsername(username).orElse(null);
         if(user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with username: " + username);
+            return new ResponseEntity<>("User not found with username: " + username, HttpStatus.NOT_FOUND);
         }
 
         //USER can only update his data, ADMIN can change data for all users
@@ -98,42 +139,58 @@ public class UserController {
             }
 
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have permission to delete this user");
+            return new ResponseEntity<>("You do not have permission to update this user", HttpStatus.UNAUTHORIZED);
         }
         myUserService.updateUser(user);
         return ResponseEntity.status(HttpStatus.OK).body("User updated: " + user);
     }
 
+    /**
+     * Updates the password for an existing user.
+     *
+     * @param authorizationHeader The authorization header in format: "Authorization": "Basic" + Base64.encode("<username>:<password>")
+     * @param username            The username of the user to update.
+     * @param newPassword         The new password details.
+     * @return A ResponseEntity indicating the result of the operation.
+     */
     @PutMapping("/password")
     public ResponseEntity<?> updatePassword(@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
-                                            @RequestParam(required = true) String username, @Valid  @RequestBody Password newPassword,
-                                            BindingResult bindingResult) {
+                                            @RequestParam(required = true) String username,
+                                            @Valid  @RequestBody Password newPassword) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String authenticatedUsername = authentication.getName();
 
         MyUser user = myUserService.getUserByUsername(username).orElse(null);
         if(user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with username: " + username);
+            return new ResponseEntity<>("User not found with username: " + username, HttpStatus.NOT_FOUND);
         }
 
         //USER can only change his password, ADMIN can change passwords for all users
         if (user.getUsername().equals(authenticatedUsername) || myUserService.isUserAdmin(authenticatedUsername)) {
             user.setPassword(passwordEncoder.encode(newPassword.getPassword()));
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have permission to delete this user");
+            return new ResponseEntity<>("You do not have permission to update this user", HttpStatus.UNAUTHORIZED);
         }
         myUserService.updateUser(user);
-        return ResponseEntity.status(HttpStatus.OK).body("Password updated for user: " + user);
+        return new ResponseEntity<>("Password updated for user: " + user, HttpStatus.OK);
     }
 
+    /**
+     * Deletes a user by username.
+     *
+     * @param authorizationHeader The authorization header in format: "Authorization": "Basic" + Base64.encode("<username>:<password>")
+     * @param username            The username of the user to delete.
+     * @return A ResponseEntity indicating the result of the operation.
+     */
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser(@RequestHeader(value = "Authorization", required = true) String authorizationHeader, @RequestParam(required = true) String username) {
+    public ResponseEntity<?> deleteUser(@RequestHeader(value = "Authorization", required = true) String authorizationHeader,
+                                        @RequestParam(required = true) String username) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String authenticatedUsername = authentication.getName(); // Get the username of the authenticated user
 
         MyUser user = myUserService.getUserByUsername(username).orElse(null);
         if(user == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("User not found with username: " + username);
+            return new ResponseEntity<>("User not found with username:"  + username , HttpStatus.NOT_FOUND);
         }
 
         //USER can only delete his data, ADMIN can delete all data
@@ -141,18 +198,25 @@ public class UserController {
             myUserService.deleteUser(user.getId());
             return ResponseEntity.status(HttpStatus.OK).body("user successfully deleted");
         } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("You do not have permission to delete this user");
+            return new ResponseEntity<>("You do not have permission to delete this user", HttpStatus.UNAUTHORIZED);
         }
     }
 
 
-    //ONLY FOR TESTING
+    /**
+     * A simple test endpoint for verifying that the service is running.
+     *
+     * @return A ResponseEntity with a success message.
+     */
     @GetMapping("/test")
     public ResponseEntity<?> test() {
         return ResponseEntity.status(HttpStatus.OK).body("Test success");
     }
 
 
+    /**
+     * Deletes all users from the system. This is intended for testing purposes only.
+     */
     //ONLY FOR TESTING
     @DeleteMapping("/deleteall")
     public void deleteAllUsers() {
