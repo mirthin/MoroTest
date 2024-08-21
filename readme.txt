@@ -1,5 +1,11 @@
+There are two projects in this repository.
+
 MoroTest
 MoroTest is a Spring Boot application designed to manage users with authentication and authorization features. It provides RESTful APIs for user management, including creating, updating, and deleting users, as well as password management.
+
+TestRequests
+TestRequests is a simple java application, that creates simple http requests to test and show basic functions of MoroTest aplication.
+
 
 Features
 	User Management: Create, read, update, and delete user accounts.
