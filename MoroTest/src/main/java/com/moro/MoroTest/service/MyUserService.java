@@ -5,12 +5,14 @@ import com.moro.MoroTest.exception.BadRequestException;
 import com.moro.MoroTest.exception.UnauthorizedAccessException;
 import com.moro.MoroTest.exception.UserNotFoundException;
 import com.moro.MoroTest.model.Role;
+import com.moro.MoroTest.model.UserDetailModel;
 import com.moro.MoroTest.repository.UserRepository;
 import com.moro.MoroTest.dao.MyUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,23 +24,21 @@ import java.util.Optional;
 import static org.springframework.security.core.userdetails.User.withUsername;
 
 @Service
-public class MyUserService implements org.springframework.security.core.userdetails.UserDetailsService {
+public class MyUserService implements UserDetailsService {
 
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
     private PasswordEncoder passwordEncoder;
+
+    public MyUserService( PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        MyUser user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException(username));
-
-        UserBuilder builder = withUsername(user.getUsername());
-        builder.password(user.getPassword());
-        builder.roles("USER"); // For simplicity, assigning all users the "USER" role
-        return builder.build();
+        Optional<MyUser> user = userRepository.findByUsername(username);
+        return user.map(UserDetailModel::new).orElseThrow(()->new UsernameNotFoundException("Invalid Username"));
     }
 
     public Optional<MyUser> getUserByUsername(String username) throws UsernameNotFoundException {
@@ -54,10 +54,26 @@ public class MyUserService implements org.springframework.security.core.userdeta
     }
 
     public MyUser addUser(MyUser user) {
+        validatePassword(user.getPassword());
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
+
+        // Assign role to first user as ADMIN, others as USER
+        assignRoleToUser(user);
         return userRepository.save(user);
     }
 
     public MyUser updateUser(MyUser user) {
+        // Optionally update the password if provided
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        }
+
+        // Only admin can change roles
+        if (isUserAdmin(SecurityContextHolder.getContext().getAuthentication().getName())) {
+            user.setRole(user.getRole());
+        }
+
+
         return userRepository.save(user);
     }
 
@@ -92,20 +108,4 @@ public class MyUserService implements org.springframework.security.core.userdeta
             user.setRole(Role.USER);
         }
     }
-
-    public void updateUserDetails(MyUser user, MyUser userDetails) {
-        user.setName(userDetails.getName());
-        user.setUsername(userDetails.getUsername());
-
-        // Optionally update the password if provided
-        if (userDetails.getPassword() != null && !userDetails.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(userDetails.getPassword()));
-        }
-
-        // Only admin can change roles
-        if (isUserAdmin(SecurityContextHolder.getContext().getAuthentication().getName())) {
-            user.setRole(userDetails.getRole());
-        }
-    }
-
 }

@@ -9,26 +9,32 @@ import java.util.Base64;
 public class Main {
     public static void main(String[] args) {
         try {
-
+            Long admin = 215L;
+            Long user1 = 216L;
+            Long user2 = 217L;
 
 
             deleteAllUsers();
             addUser("admin", "admin", "AdminPass1_");
-            addUser("user1", "user1", "User1pass_");
-            addUser("user2", "user2", "User2pass*");
+            //addUser("user1", "user1", "User1pass_");
+            //addUser("user2", "user2", "User2pass*");
 
             //should end with error 400 (Password has to be entered)
-            addUser("user4", "user4", null);
+            //addUser("user4", "user4", null);
 
-            updateUserPassword("admin","AdminPass1_", "admin", "AdminPass1_new");
-            updateUserPassword("admin","AdminPass1_ne", "user1", "User1pass_new");
+            updateUserPassword("admin","AdminPass1_", admin, "AdminPass1_new");
 
-            updateUserWithoutAuthorization("admin", "AdminPass1_new", "user1", "pepa", "user1", null);
-            updateUser("admin", "AdminPass1_new", "user1", "pepa", "user1", null);
+            //should not have permission
+            //updateUserPassword("admin","AdminPass1_ne", user1, "User1pass_new");
+
+            //should not have permission
+            //updateUserWithoutAuthorization("admin", "AdminPass1_new", user1, "pepa", "user1", null);
+
+            //("admin", "AdminPass1_new", user1, "pepa", "user1", null);
 
             //getUser("user1");
 
-            deleteUser("admin", "AdminPass1_ne", "user2");
+            //deleteUser("admin", "AdminPass1_ne", user2);
             //deleteUser("admin", "AdminPass1_new", "user2");
             //deleteUser("user1", "User1pass_new", "user1");
 
@@ -39,13 +45,13 @@ public class Main {
         }
     }
 
-    public static void updateUser(String authorizationUsername, String authorizationPassword, String username, String newName, String newUsername,  String newPassword) {
+    public static void updateUser(String authorizationUsername, String authorizationPassword, Long id, String newName, String newUsername,  String newPassword) {
         try {
             String auth = authorizationUsername + ":" + authorizationPassword;
             String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
             String authHeader = "Basic " + encodedAuth;
 
-            URL url = new URL("http://localhost:8080/api/users?username=" + username);
+            URL url = new URL("http://localhost:8080/api/users/" + id);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("PUT");
             connection.setRequestProperty("Authorization", authHeader);
@@ -69,13 +75,13 @@ public class Main {
         }
     }
 
-    public static void updateUserPassword(String authorizationUsername, String authorizationPassword, String username ,String newPassword) throws Exception {
+    public static void updateUserPassword(String authorizationUsername, String authorizationPassword, Long id ,String newPassword) throws Exception {
         try {
             String auth = authorizationUsername + ":" + authorizationPassword;
             String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
             String authHeader = "Basic " + encodedAuth;
 
-            URL url = new URL("http://localhost:8080/api/users/password?username=" + username);
+            URL url = new URL("http://localhost:8080/api/users/password/" + id);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("PUT");
             connection.setRequestProperty("Authorization", authHeader);
@@ -102,8 +108,8 @@ public class Main {
         getReponseAndPrint(connection);
     }
 
-    public static void getUser(String username) throws Exception {
-        URL url = new URL("http://localhost:8080/api/users/username?username=" + username);
+    public static void getUser(Long id) throws Exception {
+        URL url = new URL("http://localhost:8080/api/users/username/" + id);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
         getReponseAndPrint(connection);
@@ -133,13 +139,13 @@ public class Main {
         getReponseAndPrint(connection);
     }
 
-    public static void deleteUser(String authorizationUsername, String authorizationPassword, String username) throws Exception {
+    public static void deleteUser(String authorizationUsername, String authorizationPassword, Long id) throws Exception {
         try {
             String auth = authorizationUsername + ":" + authorizationPassword;
             String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes());
             String authHeader = "Basic " + encodedAuth;
 
-            URL url = new URL("http://localhost:8080/api/users/delete?username=" + username);
+            URL url = new URL("http://localhost:8080/api/users/delete/" + id);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("DELETE");
             connection.setRequestProperty("Authorization", authHeader);
@@ -163,10 +169,10 @@ public class Main {
         }
     }
 
-    public static void updateUserWithoutAuthorization(String authorizationUsername, String authorizationPassword, String username, String newName, String newUsername,  String newPassword) {
+    public static void updateUserWithoutAuthorization(String authorizationUsername, String authorizationPassword, Long id, String newName, String newUsername,  String newPassword) {
         try {
 
-            URL url = new URL("http://localhost:8080/api/users?username=" + username);
+            URL url = new URL("http://localhost:8080/api/users/" + id);
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("PUT");
             connection.setRequestProperty("Content-Type", "application/json; utf-8");

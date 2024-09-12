@@ -13,12 +13,10 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.web.access.AccessDeniedHandler;
-import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
@@ -27,9 +25,10 @@ import static org.springframework.security.config.Customizer.withDefaults;
 @EnableMethodSecurity(prePostEnabled = true)  // Enable method-level security
 public class SecurityConfig {
 
-    @Autowired
-    private MyUserService myUserService;
-
+    @Bean
+    public MyUserService myUserService() {
+        return new MyUserService(passwordEncoder());
+    }
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -40,7 +39,8 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager() {
         DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService(myUserService);
+        provider.setUserDetailsService(myUserService());
+        provider.setPasswordEncoder(passwordEncoder());
         return new ProviderManager(provider);
     }
 

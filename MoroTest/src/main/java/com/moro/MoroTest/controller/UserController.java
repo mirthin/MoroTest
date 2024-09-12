@@ -42,26 +42,20 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<?> createUser(@RequestBody @Valid MyUser user) {
-        myUserService.validatePassword(user.getPassword());
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
-
-        // Assign role to first user as ADMIN, others as USER
-        myUserService.assignRoleToUser(user);
         myUserService.addUser(user);
         return ResponseEntity.status(HttpStatus.OK).body(user);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody @Valid MyUser userDetails) {
         MyUser user = myUserService.validateAndRetrieveUser(id);
-        myUserService.updateUserDetails(user, userDetails);
         myUserService.updateUser(user);
         return ResponseEntity.status(HttpStatus.OK).body("User updated: " + user);
     }
 
     @PutMapping("/password/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updatePassword(@PathVariable Long id, @Valid @RequestBody Password newPassword) {
         MyUser user = myUserService.validateAndRetrieveUser(id);
         user.setPassword(passwordEncoder.encode(newPassword.getPassword()));
@@ -70,7 +64,7 @@ public class UserController {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == authentication.principal.id")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         MyUser user = myUserService.validateAndRetrieveUser(id);
         myUserService.deleteUser(user.getId());
@@ -85,5 +79,12 @@ public class UserController {
     @DeleteMapping("/deleteall")
     public void deleteAllUsers() {
         myUserService.deleteAllUsers();
+    }
+
+
+    @GetMapping("/admin")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public String adminAccess() {
+        return "Access granted to admin!";
     }
 }
