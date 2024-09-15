@@ -3,13 +3,17 @@ package com.moro.MoroTest.config;
 
 
 
+import com.moro.MoroTest.dao.MyUser;
+import com.moro.MoroTest.model.UserDetailModel;
 import com.moro.MoroTest.service.MyUserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.internal.Function;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,7 +26,7 @@ import static org.springframework.security.config.Customizer.withDefaults;
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity(prePostEnabled = true)  // Enable method-level security
+@EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
 public class SecurityConfig {
 
     @Bean
@@ -50,9 +54,7 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())  // Disable CSRF protection for APIs
             .httpBasic(withDefaults())
             .authorizeHttpRequests(auth -> auth
-                // Allow anyone to access GET requests for users
-                .requestMatchers("GET", "/api/users/**").permitAll()
-                // Require authentication for any other request
+                .requestMatchers( "/api/users/**").permitAll()
                 .anyRequest().authenticated()
             );  // Configure HTTP Basic Authentication
         return http.build();

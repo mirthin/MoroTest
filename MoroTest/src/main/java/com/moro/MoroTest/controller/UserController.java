@@ -2,6 +2,7 @@ package com.moro.MoroTest.controller;
 
 import com.moro.MoroTest.dao.MyUser;
 import com.moro.MoroTest.dao.Password;
+import com.moro.MoroTest.model.UserDetailModel;
 import com.moro.MoroTest.service.MyUserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +21,6 @@ import java.util.List;
 @Validated
 @RequestMapping("/api/users")
 public class UserController {
-
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     @Autowired
     private MyUserService myUserService;
@@ -47,34 +45,29 @@ public class UserController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody @Valid MyUser userDetails) {
+    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody @Valid MyUser newUserDetails, @CurrentUser UserDetailModel authUser) {
         MyUser user = myUserService.validateAndRetrieveUser(id);
-        myUserService.updateUser(user);
+        myUserService.updateUser(user, newUserDetails);
         return ResponseEntity.status(HttpStatus.OK).body("User updated: " + user);
     }
 
     @PutMapping("/password/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updatePassword(@PathVariable Long id, @Valid @RequestBody Password newPassword) {
+    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
+    public ResponseEntity<?> updatePassword(@PathVariable Long id, @Valid @RequestBody Password newPassword, @CurrentUser UserDetailModel authUser) {
         MyUser user = myUserService.validateAndRetrieveUser(id);
-        user.setPassword(passwordEncoder.encode(newPassword.getPassword()));
-        myUserService.updateUser(user);
+        myUserService.updateUserPassword(user, newPassword);
         return new ResponseEntity<>("Password updated for user: " + user, HttpStatus.OK);
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, @CurrentUser UserDetailModel authUser) {
         MyUser user = myUserService.validateAndRetrieveUser(id);
         myUserService.deleteUser(user.getId());
         return ResponseEntity.status(HttpStatus.OK).body("User successfully deleted");
     }
 
-    @GetMapping("/test")
-    public ResponseEntity<?> test() {
-        return ResponseEntity.status(HttpStatus.OK).body("Test success");
-    }
 
     @DeleteMapping("/deleteall")
     public void deleteAllUsers() {
@@ -82,9 +75,4 @@ public class UserController {
     }
 
 
-    @GetMapping("/admin")
-    @PreAuthorize("hasRole('ROLE_ADMIN')")
-    public String adminAccess() {
-        return "Access granted to admin!";
-    }
 }

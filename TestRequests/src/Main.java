@@ -9,32 +9,37 @@ import java.util.Base64;
 public class Main {
     public static void main(String[] args) {
         try {
-            Long admin = 215L;
-            Long user1 = 216L;
-            Long user2 = 217L;
+            Long admin = 259L;
+            Long user1 = 260L;
+            Long user2 = 261L;
 
-
+/*
             deleteAllUsers();
             addUser("admin", "admin", "AdminPass1_");
-            //addUser("user1", "user1", "User1pass_");
-            //addUser("user2", "user2", "User2pass*");
+            addUser("user1", "user1", "AdminPass1_");
+            addUser("user2", "user2", "AdminPass1_");
+*/
+
 
             //should end with error 400 (Password has to be entered)
-            //addUser("user4", "user4", null);
+            addUser("user4", "user4", null);
 
-            updateUserPassword("admin","AdminPass1_", admin, "AdminPass1_new");
+            updateUserPassword("admin","AdminPass1_", admin, "AdminPass1_");
+            updateUserPassword("user1","AdminPass1_", admin, "AdminPass1_");
+            updateUserPassword("user1","AdminPass1_", user1, "AdminPass1_");
+
 
             //should not have permission
             //updateUserPassword("admin","AdminPass1_ne", user1, "User1pass_new");
 
             //should not have permission
-            //updateUserWithoutAuthorization("admin", "AdminPass1_new", user1, "pepa", "user1", null);
+            updateUserWithoutAuthorization("admin", "AdminPass1_new", user1, "pepa", "user1", null);
 
-            //("admin", "AdminPass1_new", user1, "pepa", "user1", null);
+            updateUser("admin", "AdminPass1_", user1, "pepa", "user1", null);
 
             //getUser("user1");
 
-            //deleteUser("admin", "AdminPass1_ne", user2);
+            deleteUser("admin", "AdminPass1_", user2);
             //deleteUser("admin", "AdminPass1_new", "user2");
             //deleteUser("user1", "User1pass_new", "user1");
 

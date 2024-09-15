@@ -17,6 +17,6 @@ public interface UserRepository extends JpaRepository<MyUser, Long> {
 
     // Method to find users with ADMIN role
     default List<MyUser> findAdmins() {
-        return findByRole(Role.ADMIN);
+        return findByRole(Role.ROLE_ADMIN);
     }
 }

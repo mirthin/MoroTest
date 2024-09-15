@@ -1,27 +1,24 @@
 package com.moro.MoroTest.service;
 
 
+import com.moro.MoroTest.dao.Password;
 import com.moro.MoroTest.exception.BadRequestException;
-import com.moro.MoroTest.exception.UnauthorizedAccessException;
 import com.moro.MoroTest.exception.UserNotFoundException;
 import com.moro.MoroTest.model.Role;
 import com.moro.MoroTest.model.UserDetailModel;
 import com.moro.MoroTest.repository.UserRepository;
 import com.moro.MoroTest.dao.MyUser;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.core.userdetails.User.UserBuilder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
-
-import static org.springframework.security.core.userdetails.User.withUsername;
 
 @Service
 public class MyUserService implements UserDetailsService {
@@ -29,7 +26,7 @@ public class MyUserService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    private PasswordEncoder passwordEncoder;
+    private final PasswordEncoder passwordEncoder;
 
     public MyUserService( PasswordEncoder passwordEncoder) {
         this.passwordEncoder = passwordEncoder;
@@ -53,28 +50,34 @@ public class MyUserService implements UserDetailsService {
         return userRepository.findById(id);
     }
 
-    public MyUser addUser(MyUser user) {
-        validatePassword(user.getPassword());
+    public void addUser(MyUser user) {
+        if (user.getPassword() == null || user.getPassword().isEmpty()) {
+            throw new BadRequestException("Password");
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
 
         // Assign role to first user as ADMIN, others as USER
         assignRoleToUser(user);
-        return userRepository.save(user);
+        userRepository.save(user);
     }
 
-    public MyUser updateUser(MyUser user) {
+    public void updateUser(MyUser oldUserDetails, MyUser newUserDetails) {
+        oldUserDetails.setName(newUserDetails.getName());
+        oldUserDetails.setUsername(newUserDetails.getUsername());
+
         // Optionally update the password if provided
-        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
-            user.setPassword(passwordEncoder.encode(user.getPassword()));
+        if (newUserDetails.getPassword() != null && !newUserDetails.getPassword().isEmpty()) {
+            oldUserDetails.setPassword(passwordEncoder.encode(newUserDetails.getPassword()));
         }
 
         // Only admin can change roles
         if (isUserAdmin(SecurityContextHolder.getContext().getAuthentication().getName())) {
-            user.setRole(user.getRole());
+            if(newUserDetails.getRole() != null) {
+                oldUserDetails.setRole(newUserDetails.getRole());
+            }
         }
 
-
-        return userRepository.save(user);
+        userRepository.save(oldUserDetails);
     }
 
     public void deleteUser(Long id) {
@@ -87,7 +90,7 @@ public class MyUserService implements UserDetailsService {
 
     public boolean isUserAdmin(String username) {
         Optional<MyUser> userOpt = userRepository.findByUsername(username);
-        return userOpt.map(user -> user.getRole() == Role.ADMIN).orElse(false);
+        return userOpt.map(user -> user.getRole() == Role.ROLE_ADMIN).orElse(false);
     }
 
     public MyUser validateAndRetrieveUser(Long id) {
@@ -95,17 +98,16 @@ public class MyUserService implements UserDetailsService {
                 .orElseThrow(() -> new UserNotFoundException(id));
     }
 
-    public void validatePassword(String password) {
-        if (password == null || password.isEmpty()) {
-            throw new BadRequestException("Password");
+    public void assignRoleToUser(MyUser user) {
+        if (getAllUsers().isEmpty()) {
+            user.setRole(Role.ROLE_ADMIN);
+        } else {
+            user.setRole(Role.ROLE_USER);
         }
     }
 
-    public void assignRoleToUser(MyUser user) {
-        if (getAllUsers().isEmpty()) {
-            user.setRole(Role.ADMIN);
-        } else {
-            user.setRole(Role.USER);
-        }
+    public void updateUserPassword(MyUser user, Password newPassword) {
+        user.setPassword(passwordEncoder.encode(newPassword.getPassword()));
+        userRepository.save(user);
     }
 }
