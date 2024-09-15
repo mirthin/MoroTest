@@ -1,5 +1,6 @@
 package com.moro.MoroTest.controller;
 
+import com.moro.MoroTest.annotation.CurrentUser;
 import com.moro.MoroTest.dao.MyUser;
 import com.moro.MoroTest.dao.Password;
 import com.moro.MoroTest.model.UserDetailModel;

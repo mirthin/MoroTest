@@ -1,4 +1,4 @@
-package com.moro.MoroTest.controller;
+package com.moro.MoroTest.annotation;
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
