@@ -11,7 +11,7 @@ interface UserRepository : JpaRepository<MyUser, Long> {
     fun findByUsername(username: String): Optional<MyUser>
 
     // Custom query method to find users by role
-    fun findByRole(role: Role?): List<MyUser>
+    fun findByRole(role: Role): List<MyUser>
 
     // Method to find users with ADMIN role
     fun findAdmins(): List<MyUser> {

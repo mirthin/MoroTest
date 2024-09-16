@@ -26,14 +26,9 @@ class MyUserService (private val passwordEncoder: PasswordEncoder,
 
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String): UserDetails {
-        val user: Optional<MyUser>? = userRepository.findByUsername(username)
-        if(user != null){
-            return user.map<UserDetails>(Function<MyUser, UserDetails> { UserDetailModel(it) }).orElseThrow<UsernameNotFoundException>(
-                Supplier<UsernameNotFoundException> { UsernameNotFoundException("Invalid Username") })
-        } else {
-            throw UsernameNotFoundException("Invalid username")
-        }
-
+        val user: Optional<MyUser> = userRepository.findByUsername(username)
+        return user.map<UserDetails>(Function<MyUser, UserDetails> { UserDetailModel(it) }).orElseThrow<UsernameNotFoundException>(
+            Supplier<UsernameNotFoundException> { UsernameNotFoundException("Invalid Username") })
     }
 
     @Throws(UsernameNotFoundException::class)
