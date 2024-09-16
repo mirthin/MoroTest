@@ -55,6 +55,8 @@ public class SecurityConfig {
             .httpBasic(withDefaults())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers( "/api/users/**").permitAll()
+                .requestMatchers( "/swagger-ui/**").permitAll()
+                .requestMatchers( "/v3/api-docs/**").permitAll()
                 .anyRequest().authenticated()
             );  // Configure HTTP Basic Authentication
         return http.build();

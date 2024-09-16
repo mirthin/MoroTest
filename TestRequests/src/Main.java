@@ -13,12 +13,12 @@ public class Main {
             Long user1 = 260L;
             Long user2 = 261L;
 
-/*
+
             deleteAllUsers();
             addUser("admin", "admin", "AdminPass1_");
             addUser("user1", "user1", "AdminPass1_");
             addUser("user2", "user2", "AdminPass1_");
-*/
+
 
 
             //should end with error 400 (Password has to be entered)

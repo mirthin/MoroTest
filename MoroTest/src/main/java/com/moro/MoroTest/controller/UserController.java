@@ -10,7 +10,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -68,12 +67,4 @@ public class UserController {
         myUserService.deleteUser(user.getId());
         return ResponseEntity.status(HttpStatus.OK).body("User successfully deleted");
     }
-
-
-    @DeleteMapping("/deleteall")
-    public void deleteAllUsers() {
-        myUserService.deleteAllUsers();
-    }
-
-
 }
