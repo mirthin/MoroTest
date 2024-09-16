@@ -19,7 +19,7 @@ import org.springframework.security.web.SecurityFilterChain
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true, securedEnabled = true)
-class SecurityConfig(private val myUserService: MyUserService) {
+class SecurityConfig() {
 
     @Bean
     fun passwordEncoder(): PasswordEncoder {
@@ -27,9 +27,14 @@ class SecurityConfig(private val myUserService: MyUserService) {
     }
 
     @Bean
+    fun myUserService(): MyUserService {
+        return MyUserService(passwordEncoder())
+    }
+
+    @Bean
     fun authenticationManager(): AuthenticationManager {
         val provider = DaoAuthenticationProvider()
-        provider.setUserDetailsService(myUserService)
+        provider.setUserDetailsService(myUserService())
         provider.setPasswordEncoder(passwordEncoder())
         return ProviderManager(provider)
     }

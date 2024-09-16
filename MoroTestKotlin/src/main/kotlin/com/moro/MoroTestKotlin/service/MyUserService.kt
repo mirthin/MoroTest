@@ -20,9 +20,10 @@ import java.util.function.Function
 import java.util.function.Supplier
 
 @Service
-class MyUserService (private val passwordEncoder: PasswordEncoder,
-                     private val userRepository: UserRepository) : UserDetailsService {
+class MyUserService (private val passwordEncoder: PasswordEncoder) : UserDetailsService {
 
+    @Autowired
+    private lateinit var userRepository: UserRepository
 
     @Throws(UsernameNotFoundException::class)
     override fun loadUserByUsername(username: String): UserDetails {
@@ -44,7 +45,7 @@ class MyUserService (private val passwordEncoder: PasswordEncoder,
     }
 
     fun addUser(user: MyUser) {
-        if (user.password.isEmpty()) {
+        if (user.password.isNullOrEmpty()) {
             throw BadRequestException("Password")
         }
         user.password = (passwordEncoder.encode(user.password))
@@ -59,7 +60,7 @@ class MyUserService (private val passwordEncoder: PasswordEncoder,
         oldUserDetails.username = newUserDetails.username
 
         // Optionally update the password if provided
-        if (!newUserDetails.password.isEmpty()) {
+        if (!newUserDetails.password.isNullOrEmpty()) {
             oldUserDetails.password = passwordEncoder.encode(newUserDetails.password)
         }
 

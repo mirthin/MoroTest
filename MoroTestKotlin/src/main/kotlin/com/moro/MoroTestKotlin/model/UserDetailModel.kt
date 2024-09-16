@@ -10,7 +10,7 @@ import org.springframework.security.core.userdetails.UserDetails
 class UserDetailModel(user: MyUser) : UserDetails {
     private val id: Long = user.id
     private val username: String = user.username
-    private val password: String = user.password
+    private val password: String? = user.password
 
     private val authorities: MutableList<GrantedAuthority> = ArrayList()
 
@@ -22,7 +22,7 @@ class UserDetailModel(user: MyUser) : UserDetails {
         return this.authorities
     }
 
-    override fun getPassword(): String {
+    override fun getPassword(): String? {
         return this.password
     }
 

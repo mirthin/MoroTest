@@ -52,13 +52,13 @@ data class MyUser(
         message = "Password must contain at least one letter, one number, and one special character"
     )
     @Column(name = "password")
-    var password: String,
+    var password: String?,
 
     /**
      * The role of the user, which defines their permissions.
      */
     @Enumerated(EnumType.STRING)
-    var role: Role
+    var role: Role = Role.ROLE_USER
 ) {
 
     override fun equals(other: Any?): Boolean {

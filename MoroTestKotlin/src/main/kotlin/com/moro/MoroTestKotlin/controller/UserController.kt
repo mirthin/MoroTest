@@ -20,9 +20,9 @@ import org.springframework.web.bind.annotation.*
 @RestController
 @Validated
 @RequestMapping("/api/users")
-class UserController ( private val myUserService: MyUserService
-) {
-
+class UserController () {
+    @Autowired
+    private lateinit var myUserService: MyUserService
 
     @GetMapping
     fun getUsers(): ResponseEntity<*> {
@@ -44,7 +44,7 @@ class UserController ( private val myUserService: MyUserService
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
+    @PreAuthorize("hasRole('ADMIN')")
     fun updateUser(
         @PathVariable id: Long,
         @RequestBody @Valid newUserDetails: MyUser,
@@ -56,7 +56,7 @@ class UserController ( private val myUserService: MyUserService
     }
 
     @PutMapping("/password/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
+    @PreAuthorize("hasRole('ADMIN')")
     fun updatePassword(
         @PathVariable id: Long,
         @Valid @RequestBody newPassword: Password,
@@ -68,7 +68,7 @@ class UserController ( private val myUserService: MyUserService
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
+    @PreAuthorize("hasRole('ADMIN')")
     fun deleteUser(@PathVariable id: Long, @CurrentUser authUser: UserDetailModel): ResponseEntity<*> {
         val user: MyUser = myUserService.validateAndRetrieveUser(id)
         myUserService.deleteUser(user.id)
