@@ -1,13 +1,14 @@
-package com.moro.MoroTestKotlin.service
+package com.moro.moroTestKotlin.service
 
 
-import com.moro.MoroTestKotlin.dao.MyUser
-import com.moro.MoroTestKotlin.dao.Password
-import com.moro.MoroTestKotlin.exception.BadRequestException
-import com.moro.MoroTestKotlin.exception.UserNotFoundException
-import com.moro.MoroTestKotlin.model.Role
-import com.moro.MoroTestKotlin.model.UserDetailModel
-import com.moro.MoroTestKotlin.repository.UserRepository
+import com.moro.moroTestKotlin.dao.MyUser
+import com.moro.moroTestKotlin.dao.Password
+import com.moro.moroTestKotlin.exception.BadRequestException
+import com.moro.moroTestKotlin.exception.UserAlreadyExistsException
+import com.moro.moroTestKotlin.exception.UserNotFoundException
+import com.moro.moroTestKotlin.model.Role
+import com.moro.moroTestKotlin.model.UserDetailModel
+import com.moro.moroTestKotlin.repository.UserRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.security.core.context.SecurityContextHolder
 import org.springframework.security.core.userdetails.UserDetails
@@ -32,11 +33,6 @@ class MyUserService (private val passwordEncoder: PasswordEncoder) : UserDetails
             Supplier<UsernameNotFoundException> { UsernameNotFoundException("Invalid Username") })
     }
 
-    @Throws(UsernameNotFoundException::class)
-    fun getUserByUsername(username: String): Optional<MyUser> {
-        return userRepository.findByUsername(username)
-    }
-
     val allUsers: List<MyUser?>
         get() = userRepository.findAll()
 
@@ -45,11 +41,13 @@ class MyUserService (private val passwordEncoder: PasswordEncoder) : UserDetails
     }
 
     fun addUser(user: MyUser) {
+        if (userRepository.findByUsername(user.username).isPresent) {
+            throw UserAlreadyExistsException(user.username)
+        }
         if (user.password.isNullOrEmpty()) {
             throw BadRequestException("Password")
         }
         user.password = (passwordEncoder.encode(user.password))
-
         // Assign role to first user as ADMIN, others as USER
         assignRoleToUser(user)
         userRepository.save(user)
@@ -82,12 +80,8 @@ class MyUserService (private val passwordEncoder: PasswordEncoder) : UserDetails
 
     fun isUserAdmin(username: String): Boolean {
         val userOpt: Optional<MyUser> = userRepository.findByUsername(username)
-        if(userOpt!= null) {
-            return userOpt.map<Boolean>(Function<MyUser, Boolean> { user: MyUser -> user.role === Role.ROLE_ADMIN })
-                .orElse(false)
-        } else {
-            return false
-        }
+        return userOpt.map<Boolean>(Function<MyUser, Boolean> { user: MyUser -> user.role === Role.ROLE_ADMIN })
+            .orElse(false)
     }
 
     fun validateAndRetrieveUser(id: Long): MyUser {

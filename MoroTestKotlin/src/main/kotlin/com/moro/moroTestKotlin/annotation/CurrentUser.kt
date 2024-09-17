@@ -1,4 +1,4 @@
-package com.moro.MoroTestKotlin.annotation
+package com.moro.moroTestKotlin.annotation
 
 import org.springframework.security.core.annotation.AuthenticationPrincipal
 

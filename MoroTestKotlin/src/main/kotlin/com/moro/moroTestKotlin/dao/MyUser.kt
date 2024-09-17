@@ -1,16 +1,14 @@
-package com.moro.MoroTestKotlin.dao
+package com.moro.moroTestKotlin.dao
 
 
-import com.moro.MoroTestKotlin.model.Role
+import com.moro.moroTestKotlin.model.Role
 import jakarta.persistence.*
 import jakarta.validation.constraints.*
-import lombok.Data
 import java.util.Objects
 
 /**
  * Entity class representing a user in the system.
  */
-@Data
 @Entity
 @Table(name = "user_table")
 data class MyUser(

@@ -9,16 +9,16 @@ import java.util.Base64;
 public class Main {
     public static void main(String[] args) {
         try {
-            Long admin = 259L;
-            Long user1 = 260L;
-            Long user2 = 261L;
+            Long admin = 279L;
+            Long user1 = 280L;
+            Long user2 = 281L;
 
-
+/*
             deleteAllUsers();
             addUser("admin", "admin", "AdminPass1_");
             addUser("user1", "user1", "AdminPass1_");
             addUser("user2", "user2", "AdminPass1_");
-
+*/
 
 
             //should end with error 400 (Password has to be entered)

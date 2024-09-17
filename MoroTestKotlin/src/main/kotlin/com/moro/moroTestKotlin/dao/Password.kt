@@ -1,4 +1,4 @@
-package com.moro.MoroTestKotlin.dao
+package com.moro.moroTestKotlin.dao
 
 import jakarta.validation.constraints.NotNull
 import jakarta.validation.constraints.Pattern

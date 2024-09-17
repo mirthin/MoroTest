@@ -1,4 +1,4 @@
-package com.moro.MoroTestKotlin.exception
+package com.moro.moroTestKotlin.exception
 
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -51,6 +51,12 @@ class GlobalExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handleBadRequestException(ex: BadRequestException): ResponseEntity<String?> {
         return ResponseEntity<String?>(ex.message, HttpStatus.BAD_REQUEST)
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException::class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    fun handleUserAlreadyExistsException(ex: UserAlreadyExistsException): ResponseEntity<String?> {
+        return ResponseEntity<String?>(ex.message, HttpStatus.CONFLICT)
     }
 
     @ExceptionHandler(AccessDeniedException::class)

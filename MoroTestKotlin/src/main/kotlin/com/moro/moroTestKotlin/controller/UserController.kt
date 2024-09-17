@@ -1,16 +1,15 @@
-package com.moro.MoroTestKotlin.controller
+package com.moro.moroTestKotlin.controller
 
-import com.moro.MoroTestKotlin.annotation.CurrentUser
-import com.moro.MoroTestKotlin.dao.MyUser
-import com.moro.MoroTestKotlin.dao.Password
-import com.moro.MoroTestKotlin.model.UserDetailModel
-import com.moro.MoroTestKotlin.service.MyUserService
+import com.moro.moroTestKotlin.annotation.CurrentUser
+import com.moro.moroTestKotlin.dao.MyUser
+import com.moro.moroTestKotlin.dao.Password
+import com.moro.moroTestKotlin.model.UserDetailModel
+import com.moro.moroTestKotlin.service.MyUserService
 import jakarta.validation.Valid
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.security.crypto.password.PasswordEncoder
 import org.springframework.validation.annotation.Validated
 import org.springframework.web.bind.annotation.*
 
@@ -44,7 +43,7 @@ class UserController () {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
     fun updateUser(
         @PathVariable id: Long,
         @RequestBody @Valid newUserDetails: MyUser,
@@ -56,7 +55,7 @@ class UserController () {
     }
 
     @PutMapping("/password/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
     fun updatePassword(
         @PathVariable id: Long,
         @Valid @RequestBody newPassword: Password,
@@ -68,15 +67,10 @@ class UserController () {
     }
 
     @DeleteMapping("/delete/{id}")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN') or #id == #authUser.getId()")
     fun deleteUser(@PathVariable id: Long, @CurrentUser authUser: UserDetailModel): ResponseEntity<*> {
         val user: MyUser = myUserService.validateAndRetrieveUser(id)
         myUserService.deleteUser(user.id)
         return ResponseEntity.status(HttpStatus.OK).body("User successfully deleted")
-    }
-
-    @DeleteMapping("/deleteall")
-    fun deleteAllUsers() {
-        myUserService.deleteAllUsers()
     }
 }

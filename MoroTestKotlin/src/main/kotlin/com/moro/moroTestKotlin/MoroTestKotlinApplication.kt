@@ -1,11 +1,11 @@
-package com.moro.MoroTestKotlin
+package com.moro.moroTestKotlin
 
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
-import org.springframework.context.annotation.ComponentScan
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity
 
 @SpringBootApplication
-@ComponentScan(basePackages = ["com.moro.MoroTestKotlin"])
+@EnableMethodSecurity(prePostEnabled = true)
 class MoroTestKotlinApplication
 
 fun main(args: Array<String>) {

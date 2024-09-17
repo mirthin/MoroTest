@@ -1,4 +1,4 @@
-package com.moro.MoroTestKotlin.model
+package com.moro.moroTestKotlin.model
 
 enum class Role {
     ROLE_USER,

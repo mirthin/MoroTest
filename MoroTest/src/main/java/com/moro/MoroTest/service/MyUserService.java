@@ -3,6 +3,7 @@ package com.moro.MoroTest.service;
 
 import com.moro.MoroTest.dao.Password;
 import com.moro.MoroTest.exception.BadRequestException;
+import com.moro.MoroTest.exception.UserAlreadyExistException;
 import com.moro.MoroTest.exception.UserNotFoundException;
 import com.moro.MoroTest.model.Role;
 import com.moro.MoroTest.model.UserDetailModel;
@@ -51,6 +52,9 @@ public class MyUserService implements UserDetailsService {
     }
 
     public void addUser(MyUser user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            throw new UserAlreadyExistException(user.getUsername());
+        }
         if (user.getPassword() == null || user.getPassword().isEmpty()) {
             throw new BadRequestException("Password");
         }
